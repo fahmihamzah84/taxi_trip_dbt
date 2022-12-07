@@ -1,0 +1,87 @@
+
+version: 2
+
+models:
+  - name: vendor
+    description: "Total amount for each vendor per month"
+    columns:
+      - name: VendorID, 
+        description: "The primary key for this table"
+      - name: month
+        description: "Month of the year"
+      - name: payment_type
+        description: "Type of payment"
+      - name: total 
+        description: "Total for amount"
+  - name: zone
+    description: "How often the zone used to pick-up or to be dropped"
+    columns:
+      - name: borough 
+        description: "The borough name of the zone"
+      - name: zone
+        description: "Name of the zone to pickup or dropoff"
+      - name: as_station_to_pull
+        description: "Count of how many times the zone picked as pick-up location"
+      - name: as_station_to_drop 
+        description: "Count of how many times the zone picked as drop-off location"
+      - name: distance_from_pull_up	
+        description: "Average distance of trip whenever the zone picked as pick-up location"
+      - name: distance_to_drop
+        description: "Average distance of trip whenever the zone picked as drop-off location"
+  - name: trip
+    description: "Main table"
+    columns:
+      - name: trip_id
+        description: "Unique number to identify each trip"
+        tests:
+          - unique:
+              severity: error
+          - not_null:
+              severity: error
+      - name: VendorID
+        description: "A code indicating the TPEP provider that provided the record.
+                     1= Creative Mobile Technologies, LLC; 2= VeriFone Inc."
+      - name: tpep_pickup_datetime
+        description: "The date and time when the meter was engaged"
+      - name: tpep_dropoff_datetime
+        description: "The date and time when the meter was disengaged"
+      - name: trip_distance
+        description: "The elapsed trip distance in miles reported by the taximeter"
+      - name: pickup_zone  
+        description: "TLC Taxi Zone in which the taximeter was engaged"
+        tests:
+          - relationships:
+              to: ref {'zone'}
+              field: zone
+              severity: warn
+      - name: dropoff_zone	
+        description: "TLC Taxi Zone in which the taximeter was disengaged"
+        tests:
+          - relationships:
+              to: ref {'zone'}
+              field: zone
+              severity: warn
+      - name: payment_type
+        description: "signify how the passenger paid for the trip.
+                      ---- 1= Credit card
+                      ---- 2= Cash
+                      ---- 3= No charge
+                      ---- 4= Dispute
+                      ---- 5= Unknown
+                      ---- 6= Voided trip"
+        tests:
+        - accepted_values:
+              values: ['Credit card', 'Cash', 'No charge', 'Dispute', 'Unknown', "Voided trip"]
+              severity: warn
+      - name: fare_amount	
+        description: "The time-and-distance fare calculated by the meter"
+      - name: tip_amount	
+        description: "This field is automatically populated for credit card
+                      tips. Cash tips are not included"
+      - name: tolls_amount	
+        description: "Total amount of all tolls paid in trip."
+      - name: improvement_surcharge		
+        description: "$0.30 improvement surcharge assessed trips at the flag drop. The
+                      improvement surcharge began being levied in 2015."
+      - name: total_amount	
+        description: "The total amount charged to passengers. Does not include cash tips"
