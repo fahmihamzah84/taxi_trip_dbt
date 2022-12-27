@@ -2,7 +2,7 @@
 version: 2
 
 models:
-  - name: vendor
+  - name: dim_vendor
     description: "Total amount for each vendor per month"
     columns:
       - name: VendorID, 
@@ -13,7 +13,7 @@ models:
         description: "Type of payment"
       - name: total 
         description: "Total for amount"
-  - name: zone
+  - name: dim_zone
     description: "How often the zone used to pick-up or to be dropped"
     columns:
       - name: borough 
@@ -28,39 +28,64 @@ models:
         description: "Average distance of trip whenever the zone picked as pick-up location"
       - name: distance_to_drop
         description: "Average distance of trip whenever the zone picked as drop-off location"
-  - name: trip
+  - name: fact_trip
     description: "Main table"
     columns:
-      - name: trip_id
+      - name: trip_Id
         description: "Unique number to identify each trip"
         tests:
           - unique:
               severity: error
           - not_null:
               severity: error
-      - name: VendorID
-        description: "A code indicating the TPEP provider that provided the record.
+      - name: Vendor
+        description: "TPEP provider that provided the record.
                      1= Creative Mobile Technologies, LLC; 2= VeriFone Inc."
-      - name: tpep_pickup_datetime
+      - name: Ratecode
+        description: "The final rate code in effect at the end of the trip.
+                      1=Standard rate
+                      2=JFK
+                      3=Newark
+                      4=Nassau or Westchester
+                      5=Negotiated fare
+                      6=Group ride"
+        tests : 
+        - accepted_values:
+            values: ["Standard rate", "JFK", "Newark", "Nassau or Westchester", "Negotiated fare", "Group ride"]
+      - name: pickup_datetime
         description: "The date and time when the meter was engaged"
-      - name: tpep_dropoff_datetime
+      - name: dropoff_datetime
         description: "The date and time when the meter was disengaged"
       - name: trip_distance
         description: "The elapsed trip distance in miles reported by the taximeter"
-      - name: pickup_zone  
+      - name: PULocationID
+        description: "Identifier for pickup location"
+      - name: PickupBorough  
+        description: "TLC Taxi Borough in which the taximeter was engaged"
+      - name: PickupZone  
         description: "TLC Taxi Zone in which the taximeter was engaged"
         tests:
           - relationships:
-              to: ref {'zone'}
+              to: ref {'dim_zone'}
               field: zone
               severity: warn
-      - name: dropoff_zone	
+      - name: DOLocationID
+        description: "Identifier for drop off location"
+      - name: DropBorough  
+        description: "TLC Taxi Borough in which the taximeter was disengaged"
+      - name: DropZone	
         description: "TLC Taxi Zone in which the taximeter was disengaged"
         tests:
           - relationships:
-              to: ref {'zone'}
+              to: ref {'dim_zone'}
               field: zone
               severity: warn
+      - name: store_and_fwd_flag
+        description: "This flag indicates whether the trip record was held in vehicle
+                      memory before sending to the vendor, aka “store and forward,”
+                      because the vehicle did not have a connection to the server.
+                      Y= store and forward trip
+                      N= not a store and forward trip"
       - name: payment_type
         description: "signify how the passenger paid for the trip.
                       ---- 1= Credit card
@@ -85,3 +110,18 @@ models:
                       improvement surcharge began being levied in 2015."
       - name: total_amount	
         description: "The total amount charged to passengers. Does not include cash tips"
+
+  - name: dim_payment
+    description: "Dimensional table for payment"
+    columns: 
+    - name: payment_type
+      description: "Identifier of payment type used"
+    - name: method_payment
+      description: "Type of payment used"
+  - name: dim_ratecode
+    description: "Dimensional table for ratecode"
+    columns: 
+    - name: RatecodeID
+      description: "Identifier of The final rate code in effect at the end of the trip"
+    - name: rate_name
+      description: "Name of final rate code"
